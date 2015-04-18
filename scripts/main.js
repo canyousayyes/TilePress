@@ -100,9 +100,16 @@ $(function () {
     /* Board Model */
     Board = Backbone.Model.extend({
         defaults: {
-            row: 0,
-            col: 0,
             tiles: []
+        },
+        getRow: function () {
+            return this.get("tiles").length;
+        },
+        getCol: function () {
+            if (this.getRow === 0) {
+                return 0;
+            }
+            return this.get("tiles")[0].length;
         },
         createRandomTile: function () {
             var n = _.random(0, 2);
@@ -116,14 +123,7 @@ $(function () {
             }
         },
         createRandomClicks: function (n) {
-            var tiles = this.get("tiles"), row, col, self = this;
-
-            // Get tiles dimensions
-            row = tiles.length;
-            if (row === 0) {
-                return;
-            }
-            col = tiles[0].length;
+            var tiles = this.get("tiles"), row = this.getRow(), col = this.getCol(), self = this;
 
             // Click the board randomly n times
             _.times(n, function () {
@@ -154,8 +154,8 @@ $(function () {
             });
             return result;
         },
-        initialize: function () {
-            var row = this.get("row"), col = this.get("col"), tiles, i, j;
+        initialize: function (args) {
+            var row = (args.row || 0), col = (args.col || 0), tiles, i, j;
             tiles = new Array(row);
             for (i = 0; i < row; i += 1) {
                 tiles[i] = new Array(col);
