@@ -1,4 +1,4 @@
-/*jslint browser: true, devel: true, nomen: true */
+/*jslint browser: true, devel: true, nomen: true, unparam: true */
 /*global $, Backbone, _  */
 $(function () {
     "use strict";
@@ -22,6 +22,9 @@ $(function () {
         },
         click: function () {
             this.toggle();
+        },
+        flip: function () {
+            this.toggle();
         }
     });
 
@@ -29,6 +32,17 @@ $(function () {
         defaults: {
             state: "on",
             type: "tile-adjacent"
+        },
+        click: function (args) {
+            var relatedTiles;
+            // Super
+            Tile.prototype.click.apply(this, args);
+            // Flip adjacent tiles
+            relatedTiles = args.board.getRelatedTiles(args.i, args.j, args.board.adjacentFilter);
+            _.each(relatedTiles, function (tile) {
+                console.log(tile);
+                tile.flip(args);
+            });
         }
     });
 
@@ -52,8 +66,8 @@ $(function () {
             this.$el.html(this.template(this.model.toJSON()));
             return this;
         },
-        clickTileCallback: function () {
-            this.model.click();
+        clickTileCallback: function (e, args) {
+            this.model.click(args);
         }
     });
 
@@ -72,6 +86,20 @@ $(function () {
             case 1:
                 return new TileAdjacent();
             }
+        },
+        adjacentFilter: function (iCur, jCur, i, j) {
+            return (Math.abs(iCur - i) + Math.abs(jCur - j)) === 1;
+        },
+        getRelatedTiles: function (iCur, jCur, predicate) {
+            var tiles = this.get("tiles"), result = [];
+            _.each(tiles, function (row, i) {
+                _.each(row, function (tile, j) {
+                    if (predicate(iCur, jCur, i, j) === true) {
+                        result.push(tile);
+                    }
+                });
+            });
+            return result;
         },
         initialize: function () {
             var row = this.get("row"), col = this.get("col"), tiles, i, j;
