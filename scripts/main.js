@@ -105,7 +105,7 @@ $(function () {
             tiles: []
         },
         createRandomTile: function () {
-            var n = Math.floor(Math.random() * 3);
+            var n = _.random(0, 2);
             switch (n) {
             case 0:
                 return new Tile();
@@ -115,10 +115,33 @@ $(function () {
                 return new TileDiagonalAdjacent();
             }
         },
+        createRandomClicks: function (n) {
+            var tiles = this.get("tiles"), row, col, self = this;
+
+            // Get tiles dimensions
+            row = tiles.length;
+            if (row === 0) {
+                return;
+            }
+            col = tiles[0].length;
+
+            // Click the board randomly n times
+            _.times(n, function () {
+                var i = _.random(0, row - 1), j = _.random(0, col - 1), args;
+                args = {
+                    i: i,
+                    j: j,
+                    board: self
+                };
+                console.log(i, j);
+                tiles[i][j].click(args);
+            });
+        },
         filterAdjacent: function (iCur, jCur, i, j) {
             return (Math.abs(iCur - i) + Math.abs(jCur - j)) === 1;
         },
         filterDiagonalAdjacent: function (iCur, jCur, i, j) {
+            return Math.abs(iCur - i) === 1 && Math.abs(jCur - j) === 1;
         },
         getRelatedTiles: function (iCur, jCur, predicate) {
             var tiles = this.get("tiles"), result = [];
@@ -141,6 +164,7 @@ $(function () {
                 }
             }
             this.set("tiles", tiles);
+            this.createRandomClicks(10);
         }
     });
 
