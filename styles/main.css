@@ -8,8 +8,8 @@
 .board-cell {
     display: table-cell;
     border: 1px solid #595959;
-    width: 25px;
-    height: 25px;
+    width: 40px;
+    height: 40px;
 }
 .tile {
     width: 100%;
@@ -17,7 +17,9 @@
 }
 .tile-on {
     background-color: #DDD;
+    color: #333;
 }
 .tile-off {
     background-color: #333;
+    color: #DDD;
 }

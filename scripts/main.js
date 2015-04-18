@@ -11,7 +11,8 @@ $(function () {
 
     Tile = Backbone.Model.extend({
         defaults: {
-            state: "on"
+            state: "on",
+            type: "blank"
         },
         toggle: function () {
             var state = this.get("state");
@@ -20,6 +21,9 @@ $(function () {
             } else {
                 this.set("state", "on");
             }
+        },
+        click: function () {
+            this.toggle();
         }
     });
 
@@ -28,7 +32,7 @@ $(function () {
         className: "tile",
         template: tileViewTemplate,
         events: {
-            "click": "toggle"
+            "clicktile": "clickTileCallback"
         },
         initialize: function () {
             this.listenTo(this.model, "change", this.render);
@@ -40,8 +44,8 @@ $(function () {
             this.$el.html(this.template(this.model.toJSON()));
             return this;
         },
-        toggle: function () {
-            this.model.toggle();
+        clickTileCallback: function (e, args) {
+            this.model.click();
         }
     });
 
@@ -71,6 +75,9 @@ $(function () {
         tagName: "div",
         className: "board",
         template: boardViewTemplate,
+        events: {
+            "click .tile": "clickTileCallback"
+        },
         render: function () {
             var self = this, tiles = this.model.get("tiles");
 
@@ -82,12 +89,27 @@ $(function () {
             _.each(tiles, function (row, i) {
                 _.each(row, function (tile, j) {
                     var $cell, tileView;
-                    $cell = self.$("#board-cell-" + i + "-" + j);
+                    $cell = self.$(".board-cell[data-i=" + i + "][data-j=" + j + "]");
                     tileView = new TileView({model: tile});
                     $cell.append(tileView.render().$el);
                 });
             });
             return this;
+        },
+        clickTileCallback: function (e) {
+            var $cell, $tile, args;
+            if (e.currentTarget) {
+                // Collect event data
+                $tile = this.$(e.currentTarget);
+                $cell = $tile.parent();
+                args = {
+                    board: this.model,
+                    i: $cell.data("i"),
+                    j: $cell.data("j")
+                };
+                // Trigger event in TileView and let it handle the click event
+                this.$(e.currentTarget).trigger("clicktile", args);
+            }
         }
     });
 
@@ -95,12 +117,8 @@ $(function () {
         tagName: "div",
         className: "app",
         initialize: function () {
-            var tile, board;
-            tile = new Tile({state: "off"});
-            board = new Board({row: 20, col: 20});
-            console.log(tile.get("state"));
+            var board = new Board({row: 10, col: 8});
             console.log(board.toJSON());
-            this.tileView = new TileView({model: tile});
             this.boardView = new BoardView({model: board});
         },
         render: function () {
