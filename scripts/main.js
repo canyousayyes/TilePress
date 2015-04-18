@@ -44,7 +44,7 @@ $(function () {
             this.$el.html(this.template(this.model.toJSON()));
             return this;
         },
-        clickTileCallback: function (e, args) {
+        clickTileCallback: function () {
             this.model.click();
         }
     });
