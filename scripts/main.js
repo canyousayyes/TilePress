@@ -130,6 +130,5 @@ $(function () {
     });
 
     Main = new AppView();
-    window.a = Main;
     $('#main').append(Main.render().$el);
 });
