@@ -185,7 +185,7 @@ $(function () {
             "click .tile": "clickTileCallback"
         },
         render: function () {
-            var self = this, tiles = this.model.get("tiles");
+            var self = this;
 
             // Render Board frame
             console.log('render board');
