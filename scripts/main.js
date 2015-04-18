@@ -2,17 +2,15 @@
 /*global $, Backbone, _  */
 $(function () {
     "use strict";
-    var Tile, TileView, tileViewTemplate,
+    var Tile, TileAdjacent, TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate,
         AppView, Main;
 
-    /* Tile */
-    tileViewTemplate = _.template($("#tile-view-template").html());
-
+    /* Tile Model */
     Tile = Backbone.Model.extend({
         defaults: {
             state: "on",
-            type: "blank"
+            type: "tile-blank"
         },
         toggle: function () {
             var state = this.get("state");
@@ -26,6 +24,16 @@ $(function () {
             this.toggle();
         }
     });
+
+    TileAdjacent = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-adjacent"
+        }
+    });
+
+    /* Tile View */
+    tileViewTemplate = _.template($("#tile-view-template").html());
 
     TileView = Backbone.View.extend({
         tagName: "div",
@@ -49,14 +57,21 @@ $(function () {
         }
     });
 
-    /* Board */
-    boardViewTemplate = _.template($("#board-view-template").html());
-
+    /* Board Model */
     Board = Backbone.Model.extend({
         defaults: {
             row: 0,
             col: 0,
             tiles: []
+        },
+        createRandomTile: function () {
+            var n = Math.floor(Math.random() * 2);
+            switch (n) {
+            case 0:
+                return new Tile();
+            case 1:
+                return new TileAdjacent();
+            }
         },
         initialize: function () {
             var row = this.get("row"), col = this.get("col"), tiles, i, j;
@@ -64,12 +79,15 @@ $(function () {
             for (i = 0; i < row; i += 1) {
                 tiles[i] = new Array(col);
                 for (j = 0; j < col; j += 1) {
-                    tiles[i][j] = new Tile();
+                    tiles[i][j] = this.createRandomTile();
                 }
             }
             this.set("tiles", tiles);
         }
     });
+
+    /* Board View */
+    boardViewTemplate = _.template($("#board-view-template").html());
 
     BoardView = Backbone.View.extend({
         tagName: "div",
@@ -113,6 +131,7 @@ $(function () {
         }
     });
 
+    /* Application View */
     AppView = Backbone.View.extend({
         tagName: "div",
         className: "app",
