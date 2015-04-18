@@ -2,7 +2,7 @@
 /*global $, Backbone, _  */
 $(function () {
     "use strict";
-    var Tile, TileAdjacent, TileView, tileViewTemplate,
+    var Tile, TileAdjacent, TileDiagonalAdjacent, TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate,
         AppView, Main;
 
@@ -59,6 +59,19 @@ $(function () {
         }
     });
 
+    TileDiagonalAdjacent = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-diagonal-adjacent"
+        },
+        click: function (args) {
+            // Super
+            Tile.prototype.click.apply(this, args);
+            // Flip diagonal adjacent tiles
+            this.flipRelatedTiles(args, args.board.filterDiagonalAdjacent);
+        }
+    });
+
     /* Tile View */
     tileViewTemplate = _.template($("#tile-view-template").html());
 
@@ -92,16 +105,20 @@ $(function () {
             tiles: []
         },
         createRandomTile: function () {
-            var n = Math.floor(Math.random() * 2);
+            var n = Math.floor(Math.random() * 3);
             switch (n) {
             case 0:
                 return new Tile();
             case 1:
                 return new TileAdjacent();
+            case 2:
+                return new TileDiagonalAdjacent();
             }
         },
         filterAdjacent: function (iCur, jCur, i, j) {
             return (Math.abs(iCur - i) + Math.abs(jCur - j)) === 1;
+        },
+        filterDiagonalAdjacent: function (iCur, jCur, i, j) {
         },
         getRelatedTiles: function (iCur, jCur, predicate) {
             var tiles = this.get("tiles"), result = [];
