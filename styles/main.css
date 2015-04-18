@@ -1,0 +1,23 @@
+.board {
+    display: table;
+    margin: auto;
+}
+.board-row {
+    display: table-row;
+}
+.board-cell {
+    display: table-cell;
+    border: 1px solid #595959;
+    width: 25px;
+    height: 25px;
+}
+.tile {
+    width: 100%;
+    height: 100%;
+}
+.tile-on {
+    background-color: #DDD;
+}
+.tile-off {
+    background-color: #333;
+}
