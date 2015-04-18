@@ -81,9 +81,8 @@ $(function () {
             // Render Tiles
             _.each(tiles, function (row, i) {
                 _.each(row, function (tile, j) {
-                    var $cell, tile, tileView;
+                    var $cell, tileView;
                     $cell = self.$("#board-cell-" + i + "-" + j);
-                    tile = tiles[i][j];
                     tileView = new TileView({model: tile});
                     $cell.append(tileView.render().$el);
                 });
