@@ -111,6 +111,14 @@ $(function () {
             }
             return this.get("tiles")[0].length;
         },
+        eachTile: function (callback) {
+            var tiles = this.get("tiles");
+            _.each(tiles, function (tileRow, i) {
+                _.each(tileRow, function (tile, j) {
+                    callback.call(this, tile, i, j);
+                });
+            });
+        },
         createRandomTile: function () {
             var n = _.random(0, 2);
             switch (n) {
@@ -144,13 +152,11 @@ $(function () {
             return Math.abs(iCur - i) === 1 && Math.abs(jCur - j) === 1;
         },
         getRelatedTiles: function (iCur, jCur, predicate) {
-            var tiles = this.get("tiles"), result = [];
-            _.each(tiles, function (row, i) {
-                _.each(row, function (tile, j) {
-                    if (predicate(iCur, jCur, i, j) === true) {
-                        result.push(tile);
-                    }
-                });
+            var result = [];
+            this.eachTile(function (tile, i, j) {
+                if (predicate.call(tile, iCur, jCur, i, j) === true) {
+                    result.push(tile);
+                }
             });
             return result;
         },
@@ -186,13 +192,11 @@ $(function () {
             this.$el.html(this.template(this.model.toJSON()));
 
             // Render Tiles
-            _.each(tiles, function (row, i) {
-                _.each(row, function (tile, j) {
-                    var $cell, tileView;
-                    $cell = self.$(".board-cell[data-i=" + i + "][data-j=" + j + "]");
-                    tileView = new TileView({model: tile});
-                    $cell.append(tileView.render().$el);
-                });
+            this.model.eachTile(function (tile, i, j) {
+                var $cell, tileView;
+                $cell = self.$(".board-cell[data-i=" + i + "][data-j=" + j + "]");
+                tileView = new TileView({model: tile});
+                $cell.append(tileView.render().$el);
             });
             return this;
         },
