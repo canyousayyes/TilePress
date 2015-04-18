@@ -13,6 +13,7 @@ $(function () {
             type: "tile-blank"
         },
         toggle: function () {
+            // Toggle self state to be on / off
             var state = this.get("state");
             if (state === "on") {
                 this.set("state", "off");
@@ -21,10 +22,27 @@ $(function () {
             }
         },
         click: function () {
+            /* Optional function parameter args = {
+                    i: source_tile_row_position, 
+                    j: source_tile_col_position,
+                    board: source_board_model
+                }
+            */
+            // Default operation is toggle self
             this.toggle();
         },
         flip: function () {
+            // Optional function parameter args
+            // Default operation is toggle self
             this.toggle();
+        },
+        flipRelatedTiles: function (args, predicate) {
+            // Call flip(args) on relatedTiles based on the filter predicate
+            var relatedTiles;
+            relatedTiles = args.board.getRelatedTiles(args.i, args.j, predicate);
+            _.each(relatedTiles, function (tile) {
+                tile.flip(args);
+            });
         }
     });
 
@@ -34,15 +52,10 @@ $(function () {
             type: "tile-adjacent"
         },
         click: function (args) {
-            var relatedTiles;
             // Super
             Tile.prototype.click.apply(this, args);
             // Flip adjacent tiles
-            relatedTiles = args.board.getRelatedTiles(args.i, args.j, args.board.adjacentFilter);
-            _.each(relatedTiles, function (tile) {
-                console.log(tile);
-                tile.flip(args);
-            });
+            this.flipRelatedTiles(args, args.board.filterAdjacent);
         }
     });
 
@@ -87,7 +100,7 @@ $(function () {
                 return new TileAdjacent();
             }
         },
-        adjacentFilter: function (iCur, jCur, i, j) {
+        filterAdjacent: function (iCur, jCur, i, j) {
             return (Math.abs(iCur - i) + Math.abs(jCur - j)) === 1;
         },
         getRelatedTiles: function (iCur, jCur, predicate) {
