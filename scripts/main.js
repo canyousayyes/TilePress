@@ -10,7 +10,9 @@ $(function () {
     Tile = Backbone.Model.extend({
         defaults: {
             state: "on",
-            type: "tile-blank"
+            type: "tile-blank",
+            r: -1,
+            c: -1
         },
         toggle: function () {
             // Toggle self state to be on / off
@@ -22,24 +24,22 @@ $(function () {
             }
         },
         click: function () {
-            /* Optional function parameter args = {
-                    i: source_tile_row_position, 
-                    j: source_tile_col_position,
-                    board: source_board_model
-                }
-            */
+            // Optional function parameter args = { board: source_board_model }
             // Default operation is toggle self
             this.toggle();
         },
         flip: function () {
-            // Optional function parameter args
+            // Optional function parameter args = { board: source_board_model }
             // Default operation is toggle self
             this.toggle();
         },
         flipRelatedTiles: function (args, predicate) {
             // Call flip(args) on relatedTiles based on the filter predicate
-            var relatedTiles;
-            relatedTiles = args.board.getRelatedTiles(args.i, args.j, predicate);
+            var relatedTiles, r = this.get("r"), c = this.get("c");
+            if (r < 0 || c < 0) {
+                return;
+            }
+            relatedTiles = args.board.getRelatedTiles(r, c, predicate);
             _.each(relatedTiles, function (tile) {
                 tile.flip(args);
             });
@@ -53,7 +53,7 @@ $(function () {
         },
         click: function (args) {
             // Super
-            Tile.prototype.click.apply(this, args);
+            Tile.prototype.click.call(this, args);
             // Flip adjacent tiles
             this.flipRelatedTiles(args, args.board.filterAdjacent);
         }
@@ -66,7 +66,7 @@ $(function () {
         },
         click: function (args) {
             // Super
-            Tile.prototype.click.apply(this, args);
+            Tile.prototype.click.call(this, args);
             // Flip diagonal adjacent tiles
             this.flipRelatedTiles(args, args.board.filterDiagonalAdjacent);
         }
@@ -145,16 +145,16 @@ $(function () {
                 tiles[i][j].click(args);
             });
         },
-        filterAdjacent: function (iCur, jCur, i, j) {
-            return (Math.abs(iCur - i) + Math.abs(jCur - j)) === 1;
+        filterAdjacent: function (r, c, i, j) {
+            return (Math.abs(r - i) + Math.abs(c - j)) === 1;
         },
-        filterDiagonalAdjacent: function (iCur, jCur, i, j) {
-            return Math.abs(iCur - i) === 1 && Math.abs(jCur - j) === 1;
+        filterDiagonalAdjacent: function (r, c, i, j) {
+            return Math.abs(r - i) === 1 && Math.abs(c - j) === 1;
         },
-        getRelatedTiles: function (iCur, jCur, predicate) {
+        getRelatedTiles: function (r, c, predicate) {
             var result = [];
             this.eachTile(function (tile, i, j) {
-                if (predicate.call(tile, iCur, jCur, i, j) === true) {
+                if (predicate.call(tile, r, c, i, j) === true) {
                     result.push(tile);
                 }
             });
@@ -166,7 +166,7 @@ $(function () {
             for (i = 0; i < row; i += 1) {
                 tiles[i] = new Array(col);
                 for (j = 0; j < col; j += 1) {
-                    tiles[i][j] = this.createRandomTile();
+                    tiles[i][j] = this.createRandomTile().set({r: i, c: j});
                 }
             }
             this.set("tiles", tiles);
@@ -201,15 +201,11 @@ $(function () {
             return this;
         },
         clickTileCallback: function (e) {
-            var $cell, $tile, args;
+            var args;
             if (e.currentTarget) {
                 // Collect event data
-                $tile = this.$(e.currentTarget);
-                $cell = $tile.parent();
                 args = {
-                    board: this.model,
-                    i: $cell.data("i"),
-                    j: $cell.data("j")
+                    board: this.model
                 };
                 // Trigger event in TileView and let it handle the click event
                 this.$(e.currentTarget).trigger("clicktile", args);
