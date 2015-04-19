@@ -2,7 +2,8 @@
 /*global $, Backbone, _  */
 $(function () {
     "use strict";
-    var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable, TileRow, TileCol,
+    var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable,
+        TileRow, TileCol, TileRowCol,
         TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate, hintViewTemplate,
         AppView, Main;
@@ -167,7 +168,7 @@ $(function () {
         },
         createRandomTile: function () {
             // Return a random Object that is an instance of Tile or its subclasses
-            var n = _.random(0, 5);
+            var n = _.random(0, 6);
             switch (n) {
             case 0:
                 return new Tile();
@@ -181,6 +182,8 @@ $(function () {
                 return new TileRow();
             case 5:
                 return new TileCol();
+            case 6:
+                return new TileRowCol();
             }
         },
         createRandomClicks: function (n) {
