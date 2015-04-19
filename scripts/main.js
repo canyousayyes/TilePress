@@ -129,9 +129,9 @@ $(function () {
         },
         createMatrix: function (val) {
             // Create a row * col matrix with value = val
-            var row = this.getRow(), col = this.getCol(), matrix = Array(row), i, j;
+            var row = this.getRow(), col = this.getCol(), matrix = new Array(row), i, j;
             for (i = 0; i < row; i += 1) {
-                matrix[i] = Array(col);
+                matrix[i] = new Array(col);
                 for (j = 0; j < col; j += 1) {
                     matrix[i][j] = val;
                 }
@@ -216,7 +216,7 @@ $(function () {
             // Return true if the whole board is in the same state, false otherwise
             var row = this.getRow(), col = this.getCol(), tiles = this.get("tiles"), state, result;
             // Exceptional case
-            if ((row == 0) || (col == 0)) {
+            if ((row === 0) || (col === 0)) {
                 return true;
             }
             // Check if all tiles have the same state
