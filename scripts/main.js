@@ -4,6 +4,7 @@ $(function () {
     "use strict";
     var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable,
         TileRow, TileCol, TileRowCol,
+        TileDiagonal, TileReverseDiagonal, TileBothDiagonal,
         TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate, hintViewTemplate,
         AppView, Main;
@@ -107,6 +108,48 @@ $(function () {
         }
     });
 
+    TileRowCol = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-row-col"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return TileRow.prototype.relatedTileFilterOnClick.call(this, r, c, i, j) ||
+                TileCol.prototype.relatedTileFilterOnClick.call(this, r, c, i, j);
+        }
+    });
+
+    TileDiagonal = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-diagonal"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r - i) === (c - j)) && (r !== i) && (c !== j);
+        }
+    });
+
+    TileReverseDiagonal = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-reverse-diagonal"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r - i) === (j - c)) && (r !== i) && (c !== j);
+        }
+    });
+
+    TileBothDiagonal = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-both-diagonal"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return TileDiagonal.prototype.relatedTileFilterOnClick.call(this, r, c, i, j) ||
+                TileReverseDiagonal.prototype.relatedTileFilterOnClick.call(this, r, c, i, j);
+        }
+    });
+
     /* Tile View */
     tileViewTemplate = _.template($("#tile-view-template").html());
 
@@ -168,7 +211,7 @@ $(function () {
         },
         createRandomTile: function () {
             // Return a random Object that is an instance of Tile or its subclasses
-            var n = _.random(0, 6);
+            var n = _.random(0, 9);
             switch (n) {
             case 0:
                 return new Tile();
@@ -184,6 +227,14 @@ $(function () {
                 return new TileCol();
             case 6:
                 return new TileRowCol();
+            case 7:
+                return new TileDiagonal();
+            case 8:
+                return new TileReverseDiagonal();
+            case 9:
+                return new TileBothDiagonal();
+            default:
+                return new Tile();
             }
         },
         createRandomClicks: function (n) {
