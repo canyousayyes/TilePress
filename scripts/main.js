@@ -3,7 +3,7 @@
 $(function () {
     "use strict";
     var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable, TileView, tileViewTemplate,
-        Board, BoardView, boardViewTemplate,
+        Board, BoardView, boardViewTemplate, hintViewTemplate,
         AppView, Main;
 
     /* Tile Model */
@@ -250,6 +250,22 @@ $(function () {
             args = { board: this };
             return this.get("tiles")[i][j].click(args);
         },
+        getHint: function () {
+            // Get a hint move. Return object {r: row_index, c: col_index}
+            var row = this.getRow(), col = this.getCol(), i, j,
+                answer = this.get("answer"), input = this.get("input"), diff = [];
+            for (i = 0; i < row; i += 1) {
+                for (j = 0; j < col; j += 1) {
+                    if (answer[i][j] !== input[i][j]) {
+                        diff.push({r: i, c: j});
+                    }
+                }
+            }
+            if (diff.length > 0) {
+                return _.sample(diff, 1)[0];
+            }
+            return null;
+        },
         clickTileCallback: function (i, j) {
             var success, input;
             success = this.clickTile(i, j, false);
@@ -268,6 +284,7 @@ $(function () {
 
     /* Board View */
     boardViewTemplate = _.template($("#board-view-template").html());
+    hintViewTemplate = _.template($("#hint-view-template").html());
 
     BoardView = Backbone.View.extend({
         tagName: "div",
@@ -276,7 +293,8 @@ $(function () {
         events: {
             "click .tile": "clickTileCallback",
             "click .next": "nextPuzzleCallback",
-            "click .hint": "hintCallback"
+            "click .hint": "hintCallback",
+            "click .tile-hint": "removeAllHints"
         },
         render: function () {
             var self = this;
@@ -312,8 +330,24 @@ $(function () {
             this.model.createPuzzle(10, 8, 10);
             this.render();
         },
+        removeAllHints: function () {
+            this.$(".tile-hint").remove();
+        },
+        addHint: function (hint) {
+            var $cell;
+            this.removeAllHints();
+            $cell = this.$(".board-cell[data-i=" + hint.r + "][data-j=" + hint.c + "]");
+            if ($cell.length > 0) {
+                $cell.append(hintViewTemplate());
+            }
+        },
         hintCallback: function (e) {
+            var hint;
             e.preventDefault();
+            hint = this.model.getHint();
+            if (hint) {
+                this.addHint(hint);
+            }
         }
     });
 
