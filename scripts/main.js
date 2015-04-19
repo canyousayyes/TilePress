@@ -73,7 +73,7 @@ $(function () {
             return Tile.prototype.click.call(this, args);
         }
     });
-    
+
     TileUnpressable = Tile.extend({
         defaults: {
             state: "on",
@@ -92,9 +92,6 @@ $(function () {
         tagName: "div",
         className: "tile",
         template: tileViewTemplate,
-        events: {
-            "clicktile": "clickTileCallback"
-        },
         initialize: function () {
             this.listenTo(this.model, "change", this.render);
             this.listenTo(this.model, "destroy", this.remove);
@@ -104,9 +101,6 @@ $(function () {
             this.$el.removeClass("tile-on tile-off").addClass("tile-" + this.model.get("state"));
             this.$el.html(this.template(this.model.toJSON()));
             return this;
-        },
-        clickTileCallback: function (e, args) {
-            this.model.click(args);
         }
     });
 
@@ -166,21 +160,17 @@ $(function () {
         createRandomClicks: function (n) {
             // Randomly click on the tiles
             // Return a matrix of boolean that shows which tiles are pressed
-            var tiles = this.get("tiles"), row = this.getRow(), col = this.getCol(), self = this, result;
-            result = this.createMatrix(false);
+            var row = this.getRow(), col = this.getCol(), self = this, result = this.createMatrix(false);
 
             // Click the board randomly n times
             _.times(n, function () {
-                var i = _.random(0, row - 1), j = _.random(0, col - 1), args, success;
+                var i = _.random(0, row - 1), j = _.random(0, col - 1), success;
                 // If already clicked, skip
                 if (result[i][j] === true) {
                     return;
                 }
                 // Click the chosen tile
-                args = {
-                    board: self
-                };
-                success = tiles[i][j].click(args);
+                success = self.clickTile(i, j, true);
                 // Mark down in answer if success
                 if (success === true) {
                     result[i][j] = true;
@@ -242,6 +232,19 @@ $(function () {
             });
             return result;
         },
+        clickTile: function (i, j, force) {
+            // Click tile model on tiles[i][j]
+            // Return true if success, false otherwise
+            var row = this.getRow(), col = this.getCol(), args;
+            if ((force === false) && (this.isComplete())) {
+                return false;
+            }
+            if ((i < 0) || (i >= row) || (j < 0) || (j >= col)) {
+                return false;
+            }
+            args = { board: this };
+            return this.get("tiles")[i][j].click(args);
+        },
         initialize: function (args) {
             var row = (args.row || 0), col = (args.col || 0), difficulty = (args.difficulty || 10);
             this.createPuzzle(row, col, difficulty);
@@ -276,14 +279,13 @@ $(function () {
             return this;
         },
         clickTileCallback: function (e) {
-            var args;
+            var $cell, i, j;
             if (e.currentTarget) {
-                // Collect event data
-                args = {
-                    board: this.model
-                };
-                // Trigger event in TileView and let it handle the click event
-                this.$(e.currentTarget).trigger("clicktile", args);
+                // Click that tile
+                $cell = this.$(e.currentTarget).parent();
+                i = $cell.data("i");
+                j = $cell.data("j");
+                this.model.clickTile(i, j, false);
             }
             if (this.model.isComplete()) {
                 this.$('.board-complete').show();
