@@ -230,8 +230,8 @@ $(function () {
             return result;
         },
         initialize: function (args) {
-            var row = (args.row || 0), col = (args.col || 0);
-            this.createPuzzle(row, col, 10);
+            var row = (args.row || 0), col = (args.col || 0), difficulty = (args.difficulty || 10);
+            this.createPuzzle(row, col, difficulty);
         }
     });
 
@@ -243,7 +243,7 @@ $(function () {
         className: "board",
         template: boardViewTemplate,
         events: {
-            "click .tile": "clickTileCallback"
+            "click .tile": "clickTileCallback",
         },
         render: function () {
             var self = this;
@@ -271,7 +271,14 @@ $(function () {
                 // Trigger event in TileView and let it handle the click event
                 this.$(e.currentTarget).trigger("clicktile", args);
             }
-            console.log(this.model.isComplete());
+            if (this.model.isComplete()) {
+                this.$('.board-complete').show();
+            }
+        },
+        nextPuzzleCallback: function () {
+            this.$('.board-complete').hide();
+            this.model.createPuzzle(10, 8, 10);
+            this.render();
         }
     });
 
@@ -280,7 +287,7 @@ $(function () {
         tagName: "div",
         className: "app",
         initialize: function () {
-            var board = new Board({row: 10, col: 8});
+            var board = new Board({row: 10, col: 8, difficulty: 10});
             this.boardView = new BoardView({model: board});
         },
         render: function () {
