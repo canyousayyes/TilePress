@@ -2,7 +2,7 @@
 /*global $, Backbone, _  */
 $(function () {
     "use strict";
-    var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnpressable, TileView, tileViewTemplate,
+    var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable, TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate,
         AppView, Main;
 
@@ -74,10 +74,10 @@ $(function () {
         }
     });
 
-    TileUnpressable = Tile.extend({
+    TileUnclickable = Tile.extend({
         defaults: {
             state: "on",
-            type: "tile-unpressable"
+            type: "tile-unclickable"
         },
         click: function (args) {
             // You shall not press!
@@ -154,7 +154,7 @@ $(function () {
             case 2:
                 return new TileDiagonalAdjacent();
             case 3:
-                return new TileUnpressable();
+                return new TileUnclickable();
             }
         },
         createRandomClicks: function (n) {
