@@ -25,13 +25,15 @@ $(function () {
         },
         click: function () {
             // Optional function parameter args = { board: source_board_model }
-            // Default operation is toggle self
+            // Default operation is toggle self, return true if success, false otherwise
             this.toggle();
+            return true;
         },
         flip: function () {
             // Optional function parameter args = { board: source_board_model }
-            // Default operation is toggle self
+            // Default operation is toggle self, return true if success, false otherwise
             this.toggle();
+            return true;
         },
         flipRelatedTiles: function (args, predicate) {
             // Call flip(args) on relatedTiles based on the filter predicate
@@ -52,10 +54,10 @@ $(function () {
             type: "tile-adjacent"
         },
         click: function (args) {
-            // Super
-            Tile.prototype.click.call(this, args);
             // Flip adjacent tiles
             this.flipRelatedTiles(args, args.board.filterAdjacent);
+            // Super
+            return Tile.prototype.click.call(this, args);
         }
     });
 
@@ -65,10 +67,10 @@ $(function () {
             type: "tile-diagonal-adjacent"
         },
         click: function (args) {
-            // Super
-            Tile.prototype.click.call(this, args);
             // Flip diagonal adjacent tiles
             this.flipRelatedTiles(args, args.board.filterDiagonalAdjacent);
+            // Super
+            return Tile.prototype.click.call(this, args);
         }
     });
 
@@ -100,18 +102,24 @@ $(function () {
     /* Board Model */
     Board = Backbone.Model.extend({
         defaults: {
-            tiles: []
+            tiles: [],
+            answer: []
         },
         getRow: function () {
+            // Return number of rows in the tiles
             return this.get("tiles").length;
         },
         getCol: function () {
+            // Return number of columns of the tiles
             if (this.getRow === 0) {
                 return 0;
             }
             return this.get("tiles")[0].length;
         },
         eachTile: function (callback) {
+            // Call a function on each tile
+            // callback is a function with parameter (tile, i, j)
+            // tile = tile_model, i = row_index, j = col_index
             var tiles = this.get("tiles");
             _.each(tiles, function (tileRow, i) {
                 _.each(tileRow, function (tile, j) {
@@ -119,7 +127,19 @@ $(function () {
                 });
             });
         },
+        createMatrix: function (val) {
+            // Create a row * col matrix with value = val
+            var row = this.getRow(), col = this.getCol(), matrix = Array(row), i, j;
+            for (i = 0; i < row; i += 1) {
+                matrix[i] = Array(col);
+                for (j = 0; j < col; j += 1) {
+                    matrix[i][j] = val;
+                }
+            }
+            return matrix;
+        },
         createRandomTile: function () {
+            // Return a random Object that is an instance of Tile or its subclasses
             var n = _.random(0, 2);
             switch (n) {
             case 0:
@@ -131,19 +151,23 @@ $(function () {
             }
         },
         createRandomClicks: function (n) {
-            var tiles = this.get("tiles"), row = this.getRow(), col = this.getCol(), self = this;
+            // Randomly click on the tiles
+            // Return a matrix of boolean that shows which tiles are pressed
+            var tiles = this.get("tiles"), row = this.getRow(), col = this.getCol(), self = this, result;
+            result = this.createMatrix(false);
 
             // Click the board randomly n times
             _.times(n, function () {
-                var i = _.random(0, row - 1), j = _.random(0, col - 1), args;
+                var i = _.random(0, row - 1), j = _.random(0, col - 1), args, success;
                 args = {
-                    i: i,
-                    j: j,
                     board: self
                 };
-                console.log(i, j);
-                tiles[i][j].click(args);
+                success = tiles[i][j].click(args);
+                if (success === true) {
+                    result[i][j] = true;
+                }
             });
+            return result;
         },
         filterAdjacent: function (r, c, i, j) {
             return (Math.abs(r - i) + Math.abs(c - j)) === 1;
@@ -152,6 +176,11 @@ $(function () {
             return Math.abs(r - i) === 1 && Math.abs(c - j) === 1;
         },
         getRelatedTiles: function (r, c, predicate) {
+            // Get related tile models based on predicate function
+            // r = row_index, c = col_index
+            // predicate = function (r, c, i, j)
+            // i = row_index of the filtered tile, j = col_index of the filtered tile
+            // Return an array of tile models that fits the predicate function
             var result = [];
             this.eachTile(function (tile, i, j) {
                 if (predicate.call(tile, r, c, i, j) === true) {
@@ -160,17 +189,26 @@ $(function () {
             });
             return result;
         },
-        initialize: function (args) {
-            var row = (args.row || 0), col = (args.col || 0), tiles, i, j;
-            tiles = new Array(row);
+        createPuzzle: function (row, col, difficulty) {
+            // Create tile models
+            var tiles = new Array(row), i, j, answer;
             for (i = 0; i < row; i += 1) {
                 tiles[i] = new Array(col);
                 for (j = 0; j < col; j += 1) {
                     tiles[i][j] = this.createRandomTile().set({r: i, c: j});
                 }
             }
+            // Set tiles as soon as possible, since many functions depends on this property
             this.set("tiles", tiles);
-            this.createRandomClicks(10);
+
+            // Create random clicks to make a puzzle
+            answer = this.createRandomClicks(difficulty);
+            this.set("answer", answer);
+            console.log(answer);
+        },
+        initialize: function (args) {
+            var row = (args.row || 0), col = (args.col || 0);
+            this.createPuzzle(row, col, 10);
         }
     });
 
@@ -219,7 +257,6 @@ $(function () {
         className: "app",
         initialize: function () {
             var board = new Board({row: 10, col: 8});
-            console.log(board.toJSON());
             this.boardView = new BoardView({model: board});
         },
         render: function () {
