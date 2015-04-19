@@ -24,9 +24,15 @@ $(function () {
                 this.set("state", "on");
             }
         },
-        click: function () {
+        relatedTileFilterOnClick: function () {
+            // Filter function when this tile is clicked.
+            // Subclasses can override this and return an array of tiles to be flipped.
+            return false;
+        },
+        click: function (args) {
             // Optional function parameter args = { board: source_board_model }
             // Default operation is toggle self, return true if success, false otherwise
+            this.flipRelatedTiles(args, this.relatedTileFilterOnClick);
             this.toggle();
             return true;
         },
@@ -54,11 +60,8 @@ $(function () {
             state: "on",
             type: "tile-adjacent"
         },
-        click: function (args) {
-            // Flip adjacent tiles
-            this.flipRelatedTiles(args, args.board.filterAdjacent);
-            // Super
-            return Tile.prototype.click.call(this, args);
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return (Math.abs(r - i) + Math.abs(c - j)) === 1;
         }
     });
 
@@ -67,11 +70,8 @@ $(function () {
             state: "on",
             type: "tile-diagonal-adjacent"
         },
-        click: function (args) {
-            // Flip diagonal adjacent tiles
-            this.flipRelatedTiles(args, args.board.filterDiagonalAdjacent);
-            // Super
-            return Tile.prototype.click.call(this, args);
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return Math.abs(r - i) === 1 && Math.abs(c - j) === 1;
         }
     });
 
@@ -91,11 +91,8 @@ $(function () {
             state: "on",
             type: "tile-row"
         },
-        click: function (args) {
-            // Flip tiles in the same row
-            this.flipRelatedTiles(args, args.board.filterRow);
-            // Super
-            return Tile.prototype.click.call(this, args);
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return (r === i) && (c !== j);
         }
     });
 
@@ -104,11 +101,8 @@ $(function () {
             state: "on",
             type: "tile-col"
         },
-        click: function (args) {
-            // Flip tiles in the same col
-            this.flipRelatedTiles(args, args.board.filterCol);
-            // Super
-            return Tile.prototype.click.call(this, args);
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return (r !== i) && (c === j);
         }
     });
 
@@ -209,18 +203,6 @@ $(function () {
                 }
             });
             return result;
-        },
-        filterAdjacent: function (r, c, i, j) {
-            return (Math.abs(r - i) + Math.abs(c - j)) === 1;
-        },
-        filterDiagonalAdjacent: function (r, c, i, j) {
-            return Math.abs(r - i) === 1 && Math.abs(c - j) === 1;
-        },
-        filterRow: function (r, c, i, j) {
-            return (r === i) && (c !== j);
-        },
-        filterCol: function (r, c, i, j) {
-            return (r !== i) && (c === j);
         },
         getRelatedTiles: function (r, c, predicate) {
             // Get related tile models based on predicate function
