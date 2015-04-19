@@ -108,7 +108,8 @@ $(function () {
     Board = Backbone.Model.extend({
         defaults: {
             tiles: [],
-            answer: []
+            answer: [],
+            input: []
         },
         getRow: function () {
             // Return number of rows in the tiles
@@ -200,7 +201,7 @@ $(function () {
         },
         createPuzzle: function (row, col, difficulty) {
             // Create tile models
-            var tiles = new Array(row), i, j, answer;
+            var tiles = new Array(row), i, j, answer, input;
             for (i = 0; i < row; i += 1) {
                 tiles[i] = new Array(col);
                 for (j = 0; j < col; j += 1) {
@@ -214,6 +215,10 @@ $(function () {
             answer = this.createRandomClicks(difficulty);
             this.set("answer", answer);
             console.log(answer);
+
+            // Create empty input matrix to record user's input
+            input = this.createMatrix(false);
+            this.set("input", input);
         },
         isComplete: function () {
             // Return true if the whole board is in the same state, false otherwise
@@ -245,6 +250,16 @@ $(function () {
             args = { board: this };
             return this.get("tiles")[i][j].click(args);
         },
+        clickTileCallback: function (i, j) {
+            var success, input;
+            success = this.clickTile(i, j, false);
+            // Record the input if success
+            if (success === true) {
+                input = this.get("input");
+                input[i][j] = !input[i][j];
+                this.set("input", input);
+            }
+        },
         initialize: function (args) {
             var row = (args.row || 0), col = (args.col || 0), difficulty = (args.difficulty || 10);
             this.createPuzzle(row, col, difficulty);
@@ -260,7 +275,8 @@ $(function () {
         template: boardViewTemplate,
         events: {
             "click .tile": "clickTileCallback",
-            "click .next": "nextPuzzleCallback"
+            "click .next": "nextPuzzleCallback",
+            "click .hint": "hintCallback"
         },
         render: function () {
             var self = this;
@@ -285,7 +301,7 @@ $(function () {
                 $cell = this.$(e.currentTarget).parent();
                 i = $cell.data("i");
                 j = $cell.data("j");
-                this.model.clickTile(i, j, false);
+                this.model.clickTileCallback(i, j);
             }
             if (this.model.isComplete()) {
                 this.$('.board-complete').show();
@@ -295,6 +311,9 @@ $(function () {
             this.$('.board-complete').hide();
             this.model.createPuzzle(10, 8, 10);
             this.render();
+        },
+        hintCallback: function (e) {
+            e.preventDefault();
         }
     });
 
