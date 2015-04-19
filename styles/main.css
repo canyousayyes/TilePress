@@ -31,6 +31,9 @@
     z-index: 1;
     background-color: rgba(0, 206, 209, .6);
 }
+.board-toolbar {
+    position: absolute;
+}
 .board-toolbar a {
     text-decoration: none;
 }

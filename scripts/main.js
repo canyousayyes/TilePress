@@ -367,7 +367,8 @@ $(function () {
             "click .tile": "clickTileCallback",
             "click .next": "nextPuzzleCallback",
             "click .hint": "hintCallback",
-            "click .tile-hint": "removeAllHints"
+            "click .tile-hint": "removeAllHints",
+            "click .level": "adjustLevelCallback"
         },
         render: function () {
             var self = this;
@@ -420,6 +421,13 @@ $(function () {
             hint = this.model.getHint();
             if (hint) {
                 this.addHint(hint);
+            }
+        },
+        adjustLevelCallback: function (e) {
+            var difficulty;
+            e.preventDefault();
+            if (e.currentTarget) {
+                difficulty = this.$(e.currentTarget).data("difficulty") || "beginner";
             }
         }
     });
