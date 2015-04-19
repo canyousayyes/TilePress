@@ -244,6 +244,7 @@ $(function () {
         template: boardViewTemplate,
         events: {
             "click .tile": "clickTileCallback",
+            "click .next": "nextPuzzleCallback"
         },
         render: function () {
             var self = this;
