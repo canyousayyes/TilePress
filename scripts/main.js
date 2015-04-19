@@ -159,10 +159,16 @@ $(function () {
             // Click the board randomly n times
             _.times(n, function () {
                 var i = _.random(0, row - 1), j = _.random(0, col - 1), args, success;
+                // If already clicked, skip
+                if (result[i][j] === true) {
+                    return;
+                }
+                // Click the chosen tile
                 args = {
                     board: self
                 };
                 success = tiles[i][j].click(args);
+                // Mark down in answer if success
                 if (success === true) {
                     result[i][j] = true;
                 }
