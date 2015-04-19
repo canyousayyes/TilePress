@@ -2,7 +2,8 @@
 /*global $, Backbone, _  */
 $(function () {
     "use strict";
-    var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable, TileView, tileViewTemplate,
+    var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable, TileRow, TileCol,
+        TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate, hintViewTemplate,
         AppView, Main;
 
@@ -85,6 +86,32 @@ $(function () {
         }
     });
 
+    TileRow = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-row"
+        },
+        click: function (args) {
+            // Flip tiles in the same row
+            this.flipRelatedTiles(args, args.board.filterRow);
+            // Super
+            return Tile.prototype.click.call(this, args);
+        }
+    });
+
+    TileCol = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-col"
+        },
+        click: function (args) {
+            // Flip tiles in the same col
+            this.flipRelatedTiles(args, args.board.filterCol);
+            // Super
+            return Tile.prototype.click.call(this, args);
+        }
+    });
+
     /* Tile View */
     tileViewTemplate = _.template($("#tile-view-template").html());
 
@@ -146,7 +173,7 @@ $(function () {
         },
         createRandomTile: function () {
             // Return a random Object that is an instance of Tile or its subclasses
-            var n = _.random(0, 3);
+            var n = _.random(0, 5);
             switch (n) {
             case 0:
                 return new Tile();
@@ -156,6 +183,10 @@ $(function () {
                 return new TileDiagonalAdjacent();
             case 3:
                 return new TileUnclickable();
+            case 4:
+                return new TileRow();
+            case 5:
+                return new TileCol();
             }
         },
         createRandomClicks: function (n) {
@@ -184,6 +215,12 @@ $(function () {
         },
         filterDiagonalAdjacent: function (r, c, i, j) {
             return Math.abs(r - i) === 1 && Math.abs(c - j) === 1;
+        },
+        filterRow: function (r, c, i, j) {
+            return (r === i) && (c !== j);
+        },
+        filterCol: function (r, c, i, j) {
+            return (r !== i) && (c === j);
         },
         getRelatedTiles: function (r, c, predicate) {
             // Get related tile models based on predicate function
