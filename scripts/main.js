@@ -2,7 +2,7 @@
 /*global $, Backbone, _  */
 $(function () {
     "use strict";
-    var Tile, TileAdjacent, TileDiagonalAdjacent, TileView, tileViewTemplate,
+    var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnpressable, TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate,
         AppView, Main;
 
@@ -73,6 +73,17 @@ $(function () {
             return Tile.prototype.click.call(this, args);
         }
     });
+    
+    TileUnpressable = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-unpressable"
+        },
+        click: function (args) {
+            // You shall not press!
+            return false;
+        }
+    });
 
     /* Tile View */
     tileViewTemplate = _.template($("#tile-view-template").html());
@@ -140,7 +151,7 @@ $(function () {
         },
         createRandomTile: function () {
             // Return a random Object that is an instance of Tile or its subclasses
-            var n = _.random(0, 2);
+            var n = _.random(0, 3);
             switch (n) {
             case 0:
                 return new Tile();
@@ -148,6 +159,8 @@ $(function () {
                 return new TileAdjacent();
             case 2:
                 return new TileDiagonalAdjacent();
+            case 3:
+                return new TileUnpressable();
             }
         },
         createRandomClicks: function (n) {
