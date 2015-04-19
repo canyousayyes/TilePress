@@ -212,6 +212,23 @@ $(function () {
             this.set("answer", answer);
             console.log(answer);
         },
+        isComplete: function () {
+            // Return true if the whole board is in the same state, false otherwise
+            var row = this.getRow(), col = this.getCol(), tiles = this.get("tiles"), state, result;
+            // Exceptional case
+            if ((row == 0) || (col == 0)) {
+                return true;
+            }
+            // Check if all tiles have the same state
+            state = tiles[0][0].get("state");
+            result = true;
+            this.eachTile(function (tile) {
+                if (tile.get("state") !== state) {
+                    result = false;
+                }
+            });
+            return result;
+        },
         initialize: function (args) {
             var row = (args.row || 0), col = (args.col || 0);
             this.createPuzzle(row, col, 10);
@@ -254,6 +271,7 @@ $(function () {
                 // Trigger event in TileView and let it handle the click event
                 this.$(e.currentTarget).trigger("clicktile", args);
             }
+            console.log(this.model.isComplete());
         }
     });
 
