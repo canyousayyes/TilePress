@@ -33,6 +33,7 @@
 }
 .board-toolbar {
     position: absolute;
+    z-index: 1;
 }
 .board-toolbar a {
     text-decoration: none;

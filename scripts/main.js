@@ -174,7 +174,8 @@ $(function () {
         defaults: {
             tiles: [],
             answer: [],
-            input: []
+            input: [],
+            difficulty: "beginner"
         },
         getRow: function () {
             // Return number of rows in the tiles
@@ -186,6 +187,9 @@ $(function () {
                 return 0;
             }
             return this.get("tiles")[0].length;
+        },
+        setDifficulty: function (difficulty) {
+            this.set("difficulty", difficulty);
         },
         eachTile: function (callback) {
             // Call a function on each tile
@@ -209,9 +213,9 @@ $(function () {
             }
             return matrix;
         },
-        createRandomTile: function () {
+        createRandomTile: function (minTileType, maxTileType) {
             // Return a random Object that is an instance of Tile or its subclasses
-            var n = _.random(0, 9);
+            var n = _.random(minTileType, maxTileType);
             switch (n) {
             case 0:
                 return new Tile();
@@ -226,24 +230,24 @@ $(function () {
             case 5:
                 return new TileCol();
             case 6:
-                return new TileRowCol();
-            case 7:
                 return new TileDiagonal();
-            case 8:
+            case 7:
                 return new TileReverseDiagonal();
+            case 8:
+                return new TileRowCol();
             case 9:
                 return new TileBothDiagonal();
             default:
                 return new Tile();
             }
         },
-        createRandomClicks: function (n) {
+        createRandomClicks: function (numClicks) {
             // Randomly click on the tiles
             // Return a matrix of boolean that shows which tiles are pressed
             var row = this.getRow(), col = this.getCol(), self = this, result = this.createMatrix(false);
 
-            // Click the board randomly n times
-            _.times(n, function () {
+            // Click the board randomly numClicks times
+            _.times(numClicks, function () {
                 var i = _.random(0, row - 1), j = _.random(0, col - 1), success;
                 // If already clicked, skip
                 if (result[i][j] === true) {
@@ -272,26 +276,54 @@ $(function () {
             });
             return result;
         },
-        createPuzzle: function (row, col, difficulty) {
+        createPuzzle: function (row, col, minTileType, maxTileType, numClicks) {
+            // Create a new puzzle with dimension row * col,
+            // each tile is randomly chosen between minTileType and maxTileType
+            // and then the puzzle is clicked numClicks randomly
+
             // Create tile models
             var tiles = new Array(row), i, j, answer, input;
             for (i = 0; i < row; i += 1) {
                 tiles[i] = new Array(col);
                 for (j = 0; j < col; j += 1) {
-                    tiles[i][j] = this.createRandomTile().set({r: i, c: j});
+                    tiles[i][j] = this.createRandomTile(minTileType, maxTileType).set({r: i, c: j});
                 }
             }
             // Set tiles as soon as possible, since many functions depends on this property
             this.set("tiles", tiles);
 
             // Create random clicks to make a puzzle
-            answer = this.createRandomClicks(difficulty);
+            answer = this.createRandomClicks(numClicks);
             this.set("answer", answer);
             console.log(answer);
 
             // Create empty input matrix to record user's input
             input = this.createMatrix(false);
             this.set("input", input);
+        },
+        createPuzzleFromDifficulty: function () {
+            // Create a puzzle based on a predefined difficulty
+            var difficulty = this.get("difficulty");
+            switch (difficulty) {
+            case "beginner":
+                this.createPuzzle(4, 4, 0, 2, 8);
+                break;
+            case "advanced":
+                this.createPuzzle(6, 6, 0, 5, 12);
+                break;
+            case "proficient":
+                this.createPuzzle(8, 8, 0, 7, 20);
+                break;
+            case "expert":
+                this.createPuzzle(10, 10, 0, 9, 32);
+                break;
+            case "master":
+                this.createPuzzle(12, 12, 8, 9, 48);
+                break;
+            default:
+                this.createPuzzle(4, 4, 0, 2, 8);
+                break;
+            }
         },
         isComplete: function () {
             // Return true if the whole board is in the same state, false otherwise
@@ -310,19 +342,6 @@ $(function () {
             });
             return result;
         },
-        clickTile: function (i, j, force) {
-            // Click tile model on tiles[i][j]
-            // Return true if success, false otherwise
-            var row = this.getRow(), col = this.getCol(), args;
-            if ((force === false) && (this.isComplete())) {
-                return false;
-            }
-            if ((i < 0) || (i >= row) || (j < 0) || (j >= col)) {
-                return false;
-            }
-            args = { board: this };
-            return this.get("tiles")[i][j].click(args);
-        },
         getHint: function () {
             // Get a hint move. Return object {r: row_index, c: col_index}
             var row = this.getRow(), col = this.getCol(), i, j,
@@ -339,6 +358,19 @@ $(function () {
             }
             return null;
         },
+        clickTile: function (i, j, force) {
+            // Click tile model on tiles[i][j]
+            // Return true if success, false otherwise
+            var row = this.getRow(), col = this.getCol(), args;
+            if ((force === false) && (this.isComplete())) {
+                return false;
+            }
+            if ((i < 0) || (i >= row) || (j < 0) || (j >= col)) {
+                return false;
+            }
+            args = { board: this };
+            return this.get("tiles")[i][j].click(args);
+        },
         clickTileCallback: function (i, j) {
             var success, input;
             success = this.clickTile(i, j, false);
@@ -349,9 +381,8 @@ $(function () {
                 this.set("input", input);
             }
         },
-        initialize: function (args) {
-            var row = (args.row || 0), col = (args.col || 0), difficulty = (args.difficulty || 10);
-            this.createPuzzle(row, col, difficulty);
+        initialize: function () {
+            this.createPuzzleFromDifficulty();
         }
     });
 
@@ -401,7 +432,7 @@ $(function () {
         },
         nextPuzzleCallback: function () {
             this.$('.board-complete').hide();
-            this.model.createPuzzle(10, 8, 10);
+            this.model.createPuzzleFromDifficulty();
             this.render();
         },
         removeAllHints: function () {
@@ -428,6 +459,8 @@ $(function () {
             e.preventDefault();
             if (e.currentTarget) {
                 difficulty = this.$(e.currentTarget).data("difficulty") || "beginner";
+                this.model.setDifficulty(difficulty);
+                this.nextPuzzleCallback();
             }
         }
     });
@@ -437,7 +470,7 @@ $(function () {
         tagName: "div",
         className: "app",
         initialize: function () {
-            var board = new Board({row: 10, col: 8, difficulty: 10});
+            var board = new Board();
             this.boardView = new BoardView({model: board});
         },
         render: function () {
