@@ -88,7 +88,7 @@ $(function () {
             return false;
         }
     });
-    
+
     TileUpLeft = Tile.extend({
         defaults: {
             state: "on",
@@ -98,7 +98,7 @@ $(function () {
             return ((r > i) && (c === j)) || ((r === i) && (c > j));
         }
     });
-    
+
     TileUpRight = Tile.extend({
         defaults: {
             state: "on",
@@ -108,7 +108,7 @@ $(function () {
             return ((r > i) && (c === j)) || ((r === i) && (c < j));
         }
     });
-    
+
     TileDownLeft = Tile.extend({
         defaults: {
             state: "on",
@@ -118,7 +118,7 @@ $(function () {
             return ((r < i) && (c === j)) || ((r === i) && (c > j));
         }
     });
-    
+
     TileDownRight = Tile.extend({
         defaults: {
             state: "on",
@@ -148,7 +148,7 @@ $(function () {
             return ((r < i) && (c === j)) || ((r === i) && (c !== j));
         }
     });
-    
+
     TileUpDownLeft = Tile.extend({
         defaults: {
             state: "on",
@@ -226,7 +226,8 @@ $(function () {
             tiles: [],
             answer: [],
             input: [],
-            difficulty: "beginner"
+            difficulty: "beginner",
+            size: "small"
         },
         getRow: function () {
             // Return number of rows in the tiles
@@ -241,6 +242,9 @@ $(function () {
         },
         setDifficulty: function (difficulty) {
             this.set("difficulty", difficulty);
+        },
+        setSize: function (size) {
+            this.set("size", size);
         },
         eachTile: function (callback) {
             // Call a function on each tile
@@ -359,29 +363,64 @@ $(function () {
             input = this.createMatrix(false);
             this.set("input", input);
         },
-        createPuzzleFromDifficulty: function () {
+        createPuzzleFromParams: function () {
             // Create a puzzle based on a predefined difficulty
-            var difficulty = this.get("difficulty");
-            switch (difficulty) {
-            case "beginner":
-                this.createPuzzle(4, 4, 0, 3, 8);
+            var difficulty = this.get("difficulty"), size = this.get("size"),
+                width = 4, height = 4, minTileType = 0, maxTileType = 3, numClicks = 8, numTiles;
+            // Set values based on size and difficulty.
+            // Note that we need to set size first as numClicks depends on board size.
+            switch (size) {
+            case "small":
+                width = 4;
+                height = 4;
                 break;
-            case "advanced":
-                this.createPuzzle(6, 6, 0, 6, 12);
+            case "medium":
+                width = 6;
+                height = 6;
                 break;
-            case "proficient":
-                this.createPuzzle(8, 8, 0, 11, 20);
+            case "large":
+                width = 8;
+                height = 8;
                 break;
-            case "expert":
-                this.createPuzzle(10, 10, 0, 13, 32);
+            case "huge":
+                width = 10;
+                height = 10;
                 break;
-            case "master":
-                this.createPuzzle(12, 12, 8, 13, 48);
-                break;
-            default:
-                this.createPuzzle(4, 4, 0, 2, 8);
+            case "gigantic":
+                width = 12;
+                height = 12;
                 break;
             }
+            // Now we set the difficulty.
+            numTiles = width * height;
+            switch (difficulty) {
+            case "beginner":
+                minTileType = 0;
+                maxTileType = 3;
+                numClicks = Math.ceil(numTiles * 0.2);
+                break;
+            case "advanced":
+                minTileType = 0;
+                maxTileType = 6;
+                numClicks = Math.ceil(numTiles * 0.3);
+                break;
+            case "proficient":
+                minTileType = 0;
+                maxTileType = 11;
+                numClicks = Math.ceil(numTiles * 0.4);
+                break;
+            case "expert":
+                minTileType = 0;
+                maxTileType = 13;
+                numClicks = Math.ceil(numTiles * 0.5);
+                break;
+            case "master":
+                minTileType = 8;
+                maxTileType = 13;
+                numClicks = Math.ceil(numTiles * 0.6);
+                break;
+            }
+            this.createPuzzle(width, height, minTileType, maxTileType, numClicks);
         },
         isComplete: function () {
             // Return true if the whole board is in the same state, false otherwise
@@ -440,7 +479,7 @@ $(function () {
             }
         },
         initialize: function () {
-            this.createPuzzleFromDifficulty();
+            this.createPuzzleFromParams();
         }
     });
 
@@ -457,7 +496,8 @@ $(function () {
             "click .next": "nextPuzzleCallback",
             "click .hint": "hintCallback",
             "click .tile-hint": "removeAllHints",
-            "click .level": "adjustLevelCallback"
+            "click .level": "adjustLevelCallback",
+            "click .size": "adjustSizeCallback"
         },
         render: function () {
             var self = this;
@@ -490,7 +530,7 @@ $(function () {
         },
         nextPuzzleCallback: function () {
             this.$('.board-complete').hide();
-            this.model.createPuzzleFromDifficulty();
+            this.model.createPuzzleFromParams();
             this.render();
         },
         removeAllHints: function () {
@@ -516,8 +556,17 @@ $(function () {
             var difficulty;
             e.preventDefault();
             if (e.currentTarget) {
-                difficulty = this.$(e.currentTarget).data("difficulty") || "beginner";
+                difficulty = this.$(e.currentTarget).data("value") || "beginner";
                 this.model.setDifficulty(difficulty);
+                this.nextPuzzleCallback();
+            }
+        },
+        adjustSizeCallback: function (e) {
+            var size;
+            e.preventDefault();
+            if (e.currentTarget) {
+                size = this.$(e.currentTarget).data("value") || "small";
+                this.model.setSize(size);
                 this.nextPuzzleCallback();
             }
         }
