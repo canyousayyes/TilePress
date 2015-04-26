@@ -51,7 +51,7 @@ $(function () {
             if (r < 0 || c < 0) {
                 return;
             }
-            relatedTiles = args.board.getRelatedTiles(r, c, predicate);
+            relatedTiles = args.board.getRelatedTiles(this, predicate);
             _.each(relatedTiles, function (tile) {
                 tile.flip(args);
             });
@@ -181,7 +181,6 @@ $(function () {
             return (r !== i) && (c === j);
         },
         relatedTileFilterOnClick: function (r, c, i, j) {
-            console.log(this.get("r"), this.get("c"));
             return this.isSameRow(r, c, i, j) || this.isSameCol(r, c, i, j);
         }
     });
@@ -198,7 +197,6 @@ $(function () {
             return ((r - i) === (j - c)) && (r !== i) && (c !== j);
         },
         relatedTileFilterOnClick: function (r, c, i, j) {
-            console.log(this.get("r"), this.get("c"));
             return this.isSameDiagonal(r, c, i, j) || this.isSameReverseDiagonal(r, c, i, j);
         }
     });
@@ -248,10 +246,10 @@ $(function () {
             // Call a function on each tile
             // callback is a function with parameter (tile, i, j)
             // tile = tile_model, i = row_index, j = col_index
-            var tiles = this.get("tiles");
+            var tiles = this.get("tiles"), self = this;
             _.each(tiles, function (tileRow, i) {
                 _.each(tileRow, function (tile, j) {
-                    callback.call(this, tile, i, j);
+                    callback.call(self, tile, i, j);
                 });
             });
         },
@@ -323,15 +321,14 @@ $(function () {
             });
             return result;
         },
-        getRelatedTiles: function (r, c, predicate) {
-            // Get related tile models based on predicate function
-            // r = row_index, c = col_index
+        getRelatedTiles: function (sourceTile, predicate) {
+            // Get related tile models of sourceTile based on predicate function
             // predicate = function (r, c, i, j)
             // i = row_index of the filtered tile, j = col_index of the filtered tile
             // Return an array of tile models that fits the predicate function
-            var result = [];
+            var result = [], r = sourceTile.get("r"), c = sourceTile.get("c");
             this.eachTile(function (tile, i, j) {
-                if (predicate.call(tile, r, c, i, j) === true) {
+                if (predicate.call(sourceTile, r, c, i, j) === true) {
                     result.push(tile);
                 }
             });
