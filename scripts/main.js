@@ -3,8 +3,9 @@
 $(function () {
     "use strict";
     var Tile, TileAdjacent, TileDiagonalAdjacent, TileUnclickable,
-        TileRow, TileCol, TileRowCol,
-        TileDiagonal, TileReverseDiagonal, TileBothDiagonal,
+        TileUpLeft, TileUpRight, TileDownLeft, TileDownRight,
+        TileUpLeftRight, TileDownLeftRight, TileUpDownLeft, TileUpDownRight,
+        TileRowCol, TileBothDiagonal,
         TileView, tileViewTemplate,
         Board, BoardView, boardViewTemplate, hintViewTemplate,
         AppView, Main;
@@ -87,24 +88,84 @@ $(function () {
             return false;
         }
     });
-
-    TileRow = Tile.extend({
+    
+    TileUpLeft = Tile.extend({
         defaults: {
             state: "on",
-            type: "tile-row"
+            type: "tile-up-left"
         },
         relatedTileFilterOnClick: function (r, c, i, j) {
-            return (r === i) && (c !== j);
+            return ((r > i) && (c === j)) || ((r === i) && (c > j));
+        }
+    });
+    
+    TileUpRight = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-up-right"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r > i) && (c === j)) || ((r === i) && (c < j));
+        }
+    });
+    
+    TileDownLeft = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-down-left"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r < i) && (c === j)) || ((r === i) && (c > j));
+        }
+    });
+    
+    TileDownRight = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-down-right"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r < i) && (c === j)) || ((r === i) && (c < j));
         }
     });
 
-    TileCol = Tile.extend({
+    TileUpLeftRight = Tile.extend({
         defaults: {
             state: "on",
-            type: "tile-col"
+            type: "tile-up-left-right"
         },
         relatedTileFilterOnClick: function (r, c, i, j) {
-            return (r !== i) && (c === j);
+            return ((r > i) && (c === j)) || ((r === i) && (c !== j));
+        }
+    });
+
+    TileDownLeftRight = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-down-left-right"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r < i) && (c === j)) || ((r === i) && (c !== j));
+        }
+    });
+    
+    TileUpDownLeft = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-up-down-left"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r !== i) && (c === j)) || ((r === i) && (c > j));
+        }
+    });
+
+    TileUpDownRight = Tile.extend({
+        defaults: {
+            state: "on",
+            type: "tile-up-down-right"
+        },
+        relatedTileFilterOnClick: function (r, c, i, j) {
+            return ((r !== i) && (c === j)) || ((r === i) && (c < j));
         }
     });
 
@@ -113,29 +174,15 @@ $(function () {
             state: "on",
             type: "tile-row-col"
         },
-        relatedTileFilterOnClick: function (r, c, i, j) {
-            return TileRow.prototype.relatedTileFilterOnClick.call(this, r, c, i, j) ||
-                TileCol.prototype.relatedTileFilterOnClick.call(this, r, c, i, j);
-        }
-    });
-
-    TileDiagonal = Tile.extend({
-        defaults: {
-            state: "on",
-            type: "tile-diagonal"
+        isSameRow: function (r, c, i, j) {
+            return (r === i) && (c !== j);
+        },
+        isSameCol: function (r, c, i, j) {
+            return (r !== i) && (c === j);
         },
         relatedTileFilterOnClick: function (r, c, i, j) {
-            return ((r - i) === (c - j)) && (r !== i) && (c !== j);
-        }
-    });
-
-    TileReverseDiagonal = Tile.extend({
-        defaults: {
-            state: "on",
-            type: "tile-reverse-diagonal"
-        },
-        relatedTileFilterOnClick: function (r, c, i, j) {
-            return ((r - i) === (j - c)) && (r !== i) && (c !== j);
+            console.log(this.get("r"), this.get("c"));
+            return this.isSameRow(r, c, i, j) || this.isSameCol(r, c, i, j);
         }
     });
 
@@ -144,9 +191,15 @@ $(function () {
             state: "on",
             type: "tile-both-diagonal"
         },
+        isSameDiagonal: function (r, c, i, j) {
+            return ((r - i) === (c - j)) && (r !== i) && (c !== j);
+        },
+        isSameReverseDiagonal: function (r, c, i, j) {
+            return ((r - i) === (j - c)) && (r !== i) && (c !== j);
+        },
         relatedTileFilterOnClick: function (r, c, i, j) {
-            return TileDiagonal.prototype.relatedTileFilterOnClick.call(this, r, c, i, j) ||
-                TileReverseDiagonal.prototype.relatedTileFilterOnClick.call(this, r, c, i, j);
+            console.log(this.get("r"), this.get("c"));
+            return this.isSameDiagonal(r, c, i, j) || this.isSameReverseDiagonal(r, c, i, j);
         }
     });
 
@@ -226,16 +279,24 @@ $(function () {
             case 3:
                 return new TileUnclickable();
             case 4:
-                return new TileRow();
+                return new TileUpLeft();
             case 5:
-                return new TileCol();
+                return new TileUpRight();
             case 6:
-                return new TileDiagonal();
+                return new TileDownLeft();
             case 7:
-                return new TileReverseDiagonal();
+                return new TileDownRight();
             case 8:
-                return new TileRowCol();
+                return new TileUpLeftRight();
             case 9:
+                return new TileDownLeftRight();
+            case 10:
+                return new TileUpDownLeft();
+            case 11:
+                return new TileUpDownRight();
+            case 12:
+                return new TileRowCol();
+            case 13:
                 return new TileBothDiagonal();
             default:
                 return new Tile();
@@ -306,19 +367,19 @@ $(function () {
             var difficulty = this.get("difficulty");
             switch (difficulty) {
             case "beginner":
-                this.createPuzzle(4, 4, 0, 2, 8);
+                this.createPuzzle(4, 4, 0, 3, 8);
                 break;
             case "advanced":
-                this.createPuzzle(6, 6, 0, 5, 12);
+                this.createPuzzle(6, 6, 0, 6, 12);
                 break;
             case "proficient":
-                this.createPuzzle(8, 8, 0, 7, 20);
+                this.createPuzzle(8, 8, 0, 11, 20);
                 break;
             case "expert":
-                this.createPuzzle(10, 10, 0, 9, 32);
+                this.createPuzzle(10, 10, 0, 13, 1);
                 break;
             case "master":
-                this.createPuzzle(12, 12, 8, 9, 48);
+                this.createPuzzle(12, 12, 8, 13, 48);
                 break;
             default:
                 this.createPuzzle(4, 4, 0, 2, 8);
