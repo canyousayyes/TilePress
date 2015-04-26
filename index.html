@@ -16,13 +16,14 @@
             <span class="icon-<%= type %>"></span>
         </script>
         <script id="board-view-template" type="text/template">
-            <% _.each(tiles, function (row, i) { %>
-                <div class="board-row">
-                <% _.each(row, function (tile, j) { %>
-                    <div class="board-cell" data-i="<%= i %>" data-j="<%= j %>"></div>
+                <% _.each(tiles, function (row, i) { %>
+                    <div class="board-row">
+                    <% _.each(row, function (tile, j) { %>
+                        <div class="board-cell" data-i="<%= i %>" data-j="<%= j %>"></div>
+                    <% }); %>
+                    </div>
                 <% }); %>
-                </div>
-            <% }); %>
+            </div>
             <div class="board-toolbar">
                 <div>
                     <a class="hint icon-hint" href="#" title="Hint"></a>
