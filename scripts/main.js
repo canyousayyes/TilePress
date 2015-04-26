@@ -373,7 +373,7 @@ $(function () {
                 this.createPuzzle(8, 8, 0, 11, 20);
                 break;
             case "expert":
-                this.createPuzzle(10, 10, 0, 13, 1);
+                this.createPuzzle(10, 10, 0, 13, 32);
                 break;
             case "master":
                 this.createPuzzle(12, 12, 8, 13, 48);
